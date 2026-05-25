@@ -7,7 +7,7 @@ const { Kafka } = require('kafkajs');
 const app = express();
 const port = process.env.PORT || 3000;
 
-// ─── MIDDLEWARE ────────────────────────────────────────────────────────────────
+// --- MIDDLEWARE ---------------------------------------------------------------
 app.use(cors({
   origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
@@ -17,7 +17,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// ─── HTTP SERVER + SOCKET.IO ──────────────────────────────────────────────────
+// --- HTTP SERVER + SOCKET.IO -------------------------------------------------
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
@@ -27,7 +27,7 @@ const io = new Server(server, {
   }
 });
 
-// ─── KAFKA SETUP ──────────────────────────────────────────────────────────────
+// --- KAFKA SETUP -------------------------------------------------------------
 const kafka = new Kafka({
   clientId: 'gateway-service',
   brokers: [process.env.KAFKA_BROKER || 'kafka:9092'],
@@ -36,7 +36,7 @@ const kafka = new Kafka({
 const producer = kafka.producer();
 const consumer = kafka.consumer({ groupId: 'gateway-group' });
 
-// ─── KAFKA CONSUMER (Broadcasts completions via WebSocket) ───────────────────
+// --- KAFKA CONSUMER (Broadcasts completions via WebSocket) --------------------
 const listenForCompletions = async () => {
   let connected = false;
   while (!connected) {
@@ -47,23 +47,23 @@ const listenForCompletions = async () => {
       await consumer.run({
         eachMessage: async ({ message }) => {
           const result = JSON.parse(message.value.toString());
-          console.log('🔔 GATEWAY: Worker finished!', result);
-          
+          console.log('[GATEWAY] Worker finished:', result);
+
           // Instantly push the result to the React frontend
           io.emit('ticket_update', result);
         },
       });
       connected = true;
     } catch (error) {
-      console.log('⏳ Kafka not ready yet. Retrying in 5 seconds...');
+      console.log('[GATEWAY] Kafka not ready yet. Retrying in 5 seconds...');
       await new Promise(resolve => setTimeout(resolve, 5000));
     }
   }
 };
 
-// ─── ROUTES ───────────────────────────────────────────────────────────────────
+// --- ROUTES ------------------------------------------------------------------
 app.get('/', (req, res) => {
-  res.json({ message: 'Gateway is alive ✅' });
+  res.json({ message: 'Gateway is alive' });
 });
 
 app.post('/api/ticket', async (req, res) => {
@@ -83,25 +83,25 @@ app.post('/api/ticket', async (req, res) => {
     });
     res.status(202).json({ message: 'Ticket queued', status: 'pending' });
   } catch (error) {
-    console.error('❌ Kafka send failed:', error.message);
+    console.error('[GATEWAY] Kafka send failed:', error.message);
     res.status(500).json({ error: 'Failed to queue ticket' });
   }
 });
 
-// ─── BOOT ─────────────────────────────────────────────────────────────────────
+// --- BOOT --------------------------------------------------------------------
 const start = async () => {
   try {
     await producer.connect();
-    console.log('✅ Kafka producer connected');
+    console.log('[GATEWAY] Kafka producer connected');
   } catch (err) {
-    console.warn('⚠️  Kafka producer not ready at startup, will retry on first request:', err.message);
+    console.warn('[GATEWAY] Kafka producer not ready at startup, will retry on first request:', err.message);
   }
 
   listenForCompletions();
 
   // Bind to 0.0.0.0 for Docker/Kubernetes network mapping
   server.listen(port, '0.0.0.0', () => {
-    console.log(`🚀 Gateway API & WebSockets running on port ${port}`);
+    console.log(`[GATEWAY] API and WebSockets running on port ${port}`);
   });
 };
 

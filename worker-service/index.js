@@ -1,10 +1,10 @@
 const { Kafka } = require('kafkajs');
 const mongoose = require('mongoose');
 
-// ─── DATABASE SETUP ───────────────────────────────────────────────────────────
+// --- DATABASE SETUP ----------------------------------------------------------
 mongoose.connect(process.env.MONGO_URI || 'mongodb://mongo:27017/tickets')
-  .then(() => console.log('✅ Worker connected to MongoDB'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+  .then(() => console.log('[WORKER] Connected to MongoDB'))
+  .catch(err => console.error('[WORKER] MongoDB connection error:', err));
 
 const Ticket = mongoose.model('Ticket', {
   userId: String,
@@ -13,7 +13,7 @@ const Ticket = mongoose.model('Ticket', {
   processedAt: Date,
 });
 
-// ─── KAFKA SETUP ──────────────────────────────────────────────────────────────
+// --- KAFKA SETUP -------------------------------------------------------------
 const kafka = new Kafka({
   clientId: 'worker-service',
   brokers: [process.env.KAFKA_BROKER || 'kafka:9092'],
@@ -22,7 +22,7 @@ const kafka = new Kafka({
 const consumer = kafka.consumer({ groupId: 'worker-processing-group' });
 const producer = kafka.producer();
 
-// ─── MAIN PROCESSING LOOP ─────────────────────────────────────────────────────
+// --- MAIN PROCESSING LOOP ----------------------------------------------------
 const start = async () => {
   let connected = false;
 
@@ -31,24 +31,24 @@ const start = async () => {
     try {
       await consumer.connect();
       await producer.connect();
-      console.log('✅ Worker connected to Kafka (Consumer & Producer ready)');
+      console.log('[WORKER] Connected to Kafka (Consumer and Producer ready)');
       connected = true;
     } catch (err) {
-      console.log('⏳ Kafka not ready yet... retrying in 5 seconds');
+      console.log('[WORKER] Kafka not ready yet... retrying in 5 seconds');
       await new Promise(resolve => setTimeout(resolve, 5000));
     }
   }
 
   // 2. Subscribe to the incoming requests topic
   await consumer.subscribe({ topic: 'ticket_request', fromBeginning: false });
-  console.log('🎧 Listening for incoming ticket requests...');
+  console.log('[WORKER] Listening for incoming ticket requests...');
 
   // 3. Process Messages
   await consumer.run({
     eachMessage: async ({ message }) => {
       try {
         const { userId, event, timestamp } = JSON.parse(message.value.toString());
-        console.log(`\n📩 Received ticket request for user: ${userId}`);
+        console.log(`[WORKER] Received ticket request for user: ${userId}`);
 
         // A. SAVE TO DATABASE
         const ticket = new Ticket({
@@ -58,7 +58,7 @@ const start = async () => {
           processedAt: new Date(),
         });
         await ticket.save();
-        console.log(`✅ Ticket saved to MongoDB. ID: ${ticket._id}`);
+        console.log(`[WORKER] Ticket saved to MongoDB. ID: ${ticket._id}`);
 
         // B. SEND COMPLETION EVENT BACK TO KAFKA
         await producer.send({
@@ -75,18 +75,18 @@ const start = async () => {
             },
           ],
         });
-        console.log(`📤 Completion event sent back to Gateway for Ticket: ${ticket._id}`);
+        console.log(`[WORKER] Completion event sent back to Gateway for Ticket: ${ticket._id}`);
 
       } catch (error) {
-        console.error('❌ Error processing message:', error.message);
+        console.error('[WORKER] Error processing message:', error.message);
       }
     },
   });
 };
 
-// ─── BOOT ─────────────────────────────────────────────────────────────────────
+// --- BOOT --------------------------------------------------------------------
 start().catch(async (error) => {
-  console.error(`[Worker] Fatal error: ${error.message}`);
+  console.error(`[WORKER] Fatal error: ${error.message}`);
   // Restart loop on fatal crash
   setTimeout(start, 5000);
 });
