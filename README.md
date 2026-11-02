@@ -1,6 +1,6 @@
 # Distributed Ticketing System
 
-An event-driven backend built with Kafka, WebSockets, and Docker — a project I made to understand how microservices actually talk to each other in the real world.
+An event-driven backend built with Kafka, WebSockets, and Docker ??? a project I made to understand how microservices actually talk to each other in the real world.
 
 ---
 
@@ -8,7 +8,7 @@ An event-driven backend built with Kafka, WebSockets, and Docker — a project I
 
 I got tired of building CRUD apps where the frontend just calls a REST endpoint and waits. I wanted to understand what happens when you throw a message broker in the middle and decouple your services.
 
-So I built this: a ticket purchase flow where the frontend fires a request, Kafka queues it, a background worker processes it, and a WebSocket pushes the result back — all without the browser polling for updates.
+So I built this: a ticket purchase flow where the frontend fires a request, Kafka queues it, a background worker processes it, and a WebSocket pushes the result back ??? all without the browser polling for updates.
 
 This was a learning project. It helped me understand event-driven architecture, consumer groups, Docker networking, and why reverse proxies matter.
 
@@ -35,7 +35,7 @@ graph LR
 3. Gateway pushes a message to the `ticket_request` Kafka topic
 4. Worker consumes the message, saves a ticket to MongoDB, and publishes to `ticket_completed`
 5. Gateway consumes the completion event and broadcasts it to the browser via Socket.io
-6. React updates the UI in real-time — no refresh needed
+6. React updates the UI in real-time ??? no refresh needed
 
 ---
 
@@ -49,7 +49,7 @@ graph LR
 - **Database:** MongoDB
 - **Reverse Proxy:** NGINX
 - **Containerization:** Docker, Docker Compose
-- **Orchestration:** Kubernetes (Minikube) — optional, for local cluster testing
+- **Orchestration:** Kubernetes (Minikube) ??? optional, for local cluster testing
 - **Load Testing:** Native Node.js `fetch` with chunked concurrency
 
 ---
@@ -58,7 +58,7 @@ graph LR
 
 **Prerequisites:**
 - Docker Desktop (or Docker Engine)
-- At least 4-6 GB of free RAM — Kafka is memory-hungry
+- At least 4-6 GB of free RAM ??? Kafka is memory-hungry
 
 ```bash
 # Clone the repo
@@ -78,7 +78,7 @@ The frontend will be available at `http://localhost:5173`.
 
 ## What I Learned
 
-- **Kafka consumer groups confused me at first.** Getting the consumer to pick up messages from the right topic, with the right group ID, and handling the case where the broker isn't ready yet — that took some trial and error.
+- **Kafka consumer groups confused me at first.** Getting the consumer to pick up messages from the right topic, with the right group ID, and handling the case where the broker isn't ready yet ??? that took some trial and error.
 
 - **Docker networking is not intuitive.** Services can't reach each other by `localhost`. I spent a lot of time figuring out why `curl` worked inside a container but the browser couldn't connect. Turns out, `localhost` inside Docker is the container itself, not the host.
 
@@ -98,4 +98,5 @@ The frontend will be available at `http://localhost:5173`.
 
 ## License
 
-This is a personal learning project. No license.
+MIT - see [LICENSE](LICENSE).
+
