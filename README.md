@@ -1,5 +1,7 @@
 # Distributed Ticketing System
 
+[![CI](https://github.com/Mechtech001/distributed-ticket-service/actions/workflows/ci.yml/badge.svg)](https://github.com/Mechtech001/distributed-ticket-service/actions/workflows/ci.yml)
+
 An event-driven backend built with Kafka, WebSockets, and Docker ??? a project I made to understand how microservices actually talk to each other in the real world.
 
 ---
