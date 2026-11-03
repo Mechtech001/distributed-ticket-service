@@ -50,7 +50,7 @@ graph LR
 - **Reverse Proxy:** NGINX
 - **Containerization:** Docker, Docker Compose
 - **Orchestration:** Kubernetes (Minikube) ??? optional, for local cluster testing
-- **Load Testing:** Native Node.js `fetch` with chunked concurrency
+- **Load Testing:** Native Node.js `fetch` with chunked concurrency (implemented in `load-test.js` as well)
 
 ---
 
@@ -73,6 +73,22 @@ docker compose ps
 ```
 
 The frontend will be available at `http://localhost:5173`.
+
+## Measured load test result
+
+Verified with a cold, fresh Docker Compose stack (Frontend container not used for the measurement — requests went through the nginx reverse proxy).
+
+| Metric | Result |
+|---|---|
+| Total requests | 1,000 |
+| Accepted (HTTP 202) | 1,000 / 1,000 |
+| Failed / timed out | 0 / 1,000 |
+| Throughput | 338 req/s |
+| Average latency | 81 ms |
+| Max latency | 278 ms |
+| Tickets in MongoDB afterwards | 1,000 (plus 1 from earlier manual probe) |
+
+This is the only load figure in the repo that has actually been measured. No estimate beyond this is stated anywhere else in the README.
 
 ---
 
