@@ -105,4 +105,9 @@ const start = async () => {
   });
 };
 
-start();
+module.exports = app;
+
+// Only start when executed directly, so tests can import the app.
+if (require.main === module) {
+    start();
+}
