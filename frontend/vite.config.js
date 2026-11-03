@@ -9,11 +9,11 @@ export default defineConfig({
     // This avoids CORS entirely - the browser sees it as same-origin
     proxy: {
       '/api': {
-        target: 'http://gateway-service:3000',
+        target: 'http://gateway:3000',
         changeOrigin: true,
       },
       '/socket.io': {
-        target: 'http://gateway-service:3000',
+        target: 'http://gateway:3000',
         changeOrigin: true,
         ws: true, // Enable WebSocket proxying
       },
